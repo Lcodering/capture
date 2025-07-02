@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>截图编辑器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部工具栏 */
+        .top-toolbar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 48px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 工具按钮样式 */
+        .tool-btn {
+            background: transparent;
+            border: 1px solid #404040;
+            color: #ffffff;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            background: #404040;
+            border-color: #606060;
+        }
+
+        .tool-btn.active {
+            background: #0078d4;
+            border-color: #0078d4;
+        }
+
+        .tool-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 工具分组 */
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+            border-right: 1px solid #404040;
+        }
+
+        .tool-group:last-child {
+            border-right: none;
+        }
+
+        /* 滑块控件 */
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #cccccc;
+            font-size: 12px;
+        }
+
+        .slider {
+            width: 80px;
+            height: 4px;
+            background: #404040;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #0078d4;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 颜色选择器 */
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #404040;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #000000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-picker input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: #1a1a1a;
+        }
+
+        /* 左侧工具面板 */
+        .left-panel {
+            width: 60px;
+            background: #2d2d2d;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 8px;
+        }
+
+        /* 画布容器 */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: auto;
+            background: 
+                radial-gradient(circle, #333 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        canvas {
+            max-width: calc(100% - 40px);
+            max-height: calc(100% - 40px);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            cursor: crosshair;
+            background: white;
+        }
+
+        /* 文本输入框 */
+        .text-input {
+            position: absolute;
+            display: none;
+            background: white;
+            border: 2px solid #0078d4;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            min-width: 120px;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #106ebe;
+        }
+
+        /* 属性面板 */
+        .property-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            min-width: 200px;
+            display: none;
+            z-index: 100;
+        }
+
+        .property-panel.show {
+            display: block;
+        }
+
+        .property-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .property-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 操作按钮 */
+        .action-btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #106ebe;
+        }
+
+        .action-btn.secondary {
+            background: #404040;
+            color: #cccccc;
+        }
+
+        .action-btn.secondary:hover {
+            background: #505050;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+        }
+
+        .tool-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: #2d2d2d;
+            border-top: 1px solid #404040;
+            padding: 4px 16px;
+            font-size: 11px;
+            color: #888888;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 24px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .left-panel {
+                display: none;
+            }
+            
+            .property-panel {
+                position: fixed;
+                top: 60px;
+                right: 8px;
+                left: 8px;
+                width: auto;
+            }
+            
+            .top-toolbar {
+                flex-wrap: wrap;
+                min-height: auto;
+                padding: 8px;
+            }
+            
+            .toolbar-left, .toolbar-right {
+                gap: 4px;
+            }
+            
+            .tool-btn {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="top-toolbar">
+        <div class="toolbar-left">
+            <div class="tool-group">
+                <button class="tool-btn active" data-tool="select" title="选择">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2,2V8H4V4H8V2H2M2,16V22H8V20H4V16H2M16,2V4H20V8H22V2H16M20,16V20H16V22H22V16H20Z"/>
+                    </svg>
+                    <div class="tooltip">选择工具</div>
+                </button>
+                <button class="tool-btn" data-tool="pen" title="画笔">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.84,2.73C16.45,2.73 16.07,2.88 15.77,3.17L13.65,5.29L18.95,10.6L21.07,8.5C21.67,7.89 21.67,6.94 21.07,6.36L17.9,3.17C17.6,2.88 17.22,2.73 16.84,2.73M12.94,6L4.84,14.11L7.4,14.39L7.58,16.68L9.86,16.85L10.15,19.41L18.25,11.3M4.25,15.04L2.5,21.73L9.2,19.94L8.96,17.78L6.65,17.61L6.47,15.29"/>
+                    </svg>
+                    <div class="tooltip">画笔</div>
+                </button>
+                <button class="tool-btn" data-tool="arrow" title="箭头">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z"/>
+                    </svg>
+                    <div class="tooltip">箭头</div>
+                </button>
+                <button class="tool-btn" data-tool="rectangle" title="矩形">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    </svg>
+                    <div class="tooltip">矩形</div>
+                </button>
+                <button class="tool-btn" data-tool="circle" title="圆形">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    <div class="tooltip">圆形</div>
+                </button>
+                <button class="tool-btn" data-tool="text" title="文字">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,7.17 17.26,6.87C16.73,6.56 16.11,6.41 15.39,6.41H13.41V16.24C13.41,17.39 13.58,18.1 13.93,18.37C14.27,18.64 14.93,18.78 15.87,18.78V19.65H8.12V18.78C9.05,18.78 9.71,18.64 10.05,18.37C10.4,18.1 10.57,17.39 10.57,16.24V6.41H8.58C7.86,6.41 7.24,6.56 6.71,6.87C6.18,7.17 5.72,7.74 5.27,8.61L4.31,8.35L5.47,4H18.5Z"/>
+                    </svg>
+                    <div class="tooltip">文字</div>
+                </button>
+                <button class="tool-btn" data-tool="blur" title="模糊">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10A2,2 0 0,1 14,12M12,3C7.58,3 4,6.58 4,11C4,15.42 7.58,19 12,19C16.42,19 20,15.42 20,11C20,6.58 16.42,3 12,3Z"/>
+                    </svg>
+                    <div class="tooltip">模糊/马赛克</div>
+                </button>
+            </div>
+
+            <div class="tool-group">
+                <div class="slider-control">
+                    <span>粗细</span>
+                    <input type="range" class="slider" id="strokeWidth" min="1" max="20" value="3">
+                    <span id="strokeValue">3</span>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <div class="color-picker">
+                    <input type="color" id="strokeColor" value="#ff0000">
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <button class="tool-btn" id="undo" title="撤销">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z"/>
+                </svg>
+                <div class="tooltip">撤销</div>
+            </button>
+            <button class="tool-btn" id="redo" title="重做">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.53,15.22L3.9,16C4.95,12.81 7.96,10.5 11.5,10.5C13.46,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z"/>
+                </svg>
+                <div class="tooltip">重做</div>
+            </button>
+            <button class="action-btn" id="copy">复制</button>
+            <button class="action-btn" id="save">保存</button>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+        <!-- 画布容器 -->
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <input type="text" class="text-input" id="textInput" placeholder="输入文字...">
+        </div>
+
+        <!-- 属性面板 -->
+        <div class="property-panel" id="propertyPanel">
+            <div class="property-item">
+                <span>填充</span>
+                <input type="checkbox" id="fillShape">
+            </div>
+            <div class="property-item">
+                <span>字体大小</span>
+                <input type="range" id="fontSize" min="12" max="48" value="16">
+                <span id="fontSizeValue">16</span>
+            </div>
+            <div class="property-item">
+                <span>透明度</span>
+                <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="1">
+                <span id="opacityValue">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span id="canvasSize">画布: 0 × 0</span>
+        </div>
+        <div class="status-right">
+            <span id="currentTool">当前工具: 选择</span>
+        </div>
+    </div>
+
+    <script src="edit.js"></script>
+</body>
+</html>

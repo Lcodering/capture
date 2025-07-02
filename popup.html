@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Screenshot</title>
+  <style>
+    body { 
+      width: 150px; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+      margin: 0;
+    }
+    
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: transparent;
+      border-radius: 12px;
+      padding: 8px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    #captureVisible {
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+    }
+    
+    #captureFull {
+      background: linear-gradient(135deg, #42e695, #3bb2b8);
+      color: white;
+    }
+    
+    .icon {
+      margin-right: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+    
+    h1 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 15px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="btn-container">
+    <button id="captureVisible">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+          <path d="M20 4h-3.17l-1.24-1.35A1.99 1.99 0 0014.12 2H9.88c-.56 0-1.1.24-1.48.65L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+        </svg>
+      </span>
+      Capture Visible
+    </button>
+    <button id="captureFull">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+          <path d="M7 7h10v2H7zM7 11h10v2H7zM7 15h7v2H7z"/>
+        </svg>
+      </span>
+      Capture Full Page
+    </button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
